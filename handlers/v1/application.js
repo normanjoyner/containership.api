@@ -19,7 +19,7 @@ module.exports = function(core){
                 return next();
             }
             else{
-                var config = _.pick(req.body, ["tags", "command", "memory", "cpus", "image", "env_vars", "engine", "container_port", "network_mode"]);
+                var config = _.pick(req.body, ["tags", "command", "memory", "cpus", "image", "env_vars", "engine", "container_port", "network_mode", "respawn"]);
                 config.id = req.params.application;
 
                 var application = core.applications.add(config)
@@ -58,9 +58,11 @@ module.exports = function(core){
             if(_.has(req.body, "container_port"))
                 body.container_port = req.body.container_port;
             if(_.has(req.body, "network_mode"))
-                body.network_mode= req.body.network_mode;
+                body.network_mode = req.body.network_mode;
+            if(_.has(req.body, "respawn"))
+                body.respawn = req.body.respawn;
 
-            application.update(_.pick(req.body, ["tags", "command", "memory", "cpus", "image", "engine", "env_vars", "container_port", "network_mode"]));
+            application.update(_.pick(req.body, ["tags", "command", "memory", "cpus", "image", "engine", "env_vars", "container_port", "network_mode", "respawn"]));
             core.applications.sync(function(){
                 core.applications.redeploy_containers(req.params.application, function(){
                     res.stash.code = 200;
