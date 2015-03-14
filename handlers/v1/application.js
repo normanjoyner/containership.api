@@ -102,9 +102,7 @@ module.exports = function(core){
         // create application container
         create_containers: function(req, res, next){
             if(_.has(req.query, "count")){
-                var body = {
-                    tags: {}
-                }
+                var body = {};
 
                 if(_.has(req.body, "tags") && _.isObject(req.body.tags))
                     body.tags = req.body.tags;
