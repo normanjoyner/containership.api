@@ -80,7 +80,7 @@ module.exports = function(core){
 
         // get application containers
         get_containers: function(req, res, next){
-            var containers = core.applications.list[req.params.application].serialize()['containers'];
+            var containers = core.applications.list[req.params.application].serialize().containers;
             res.stash.body = containers;
             res.stash.code = 200;
             return next();
@@ -88,7 +88,7 @@ module.exports = function(core){
 
         // get application container
         get_container: function(req, res, next){
-            var container = core.applications.list[req.params.application].serialize()['containers'][req.params.container];
+            var container = core.applications.list[req.params.application].containers[req.params.container];
             if(_.isUndefined(container))
                 req.body.code = 404;
             else{
