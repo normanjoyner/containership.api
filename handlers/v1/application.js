@@ -19,7 +19,20 @@ module.exports = function(core){
                 return next();
             }
             else{
-                var config = _.pick(req.body, ["tags", "command", "memory", "cpus", "image", "env_vars", "engine", "container_port", "network_mode", "respawn"]);
+                var config = _.pick(req.body, [
+                    "command",
+                    "container_port",
+                    "cpus",
+                    "engine",
+                    "env_vars",
+                    "image",
+                    "memory",
+                    "network_mode",
+                    "respawn",
+                    "tags",
+                    "volumes"
+                ]);
+
                 config.id = req.params.application;
 
                 var application = core.applications.add(config)
@@ -41,28 +54,43 @@ module.exports = function(core){
             var application = core.applications.list[req.params.application];
             var body = {};
 
-            if(_.has(req.body, "tags"))
-                body.tags = req.body.tags;
             if(_.has(req.body, "command"))
                 body.command = req.body.command;
-            if(_.has(req.body, "memory"))
-                body.memory = req.body.memory;
-            if(_.has(req.body, "cpus"))
-                body.cpus = req.body.cpus;
-            if(_.has(req.body, "image"))
-                body.image = req.body.image;
-            if(_.has(req.body, "env_vars"))
-                body.env_vars = req.body.env_vars;
-            if(_.has(req.body, "engine"))
-                body.engine = req.body.engine;
             if(_.has(req.body, "container_port"))
                 body.container_port = req.body.container_port;
+            if(_.has(req.body, "cpus"))
+                body.cpus = req.body.cpus;
+            if(_.has(req.body, "engine"))
+                body.engine = req.body.engine;
+            if(_.has(req.body, "env_vars"))
+                body.env_vars = req.body.env_vars;
+            if(_.has(req.body, "image"))
+                body.image = req.body.image;
+            if(_.has(req.body, "memory"))
+                body.memory = req.body.memory;
             if(_.has(req.body, "network_mode"))
                 body.network_mode = req.body.network_mode;
             if(_.has(req.body, "respawn"))
                 body.respawn = req.body.respawn;
+            if(_.has(req.body, "tags"))
+                body.tags = req.body.tags;
+            if(_.has(req.body, "volumes"))
+                body.volumes = req.body.volumes;
 
-            application.update(_.pick(req.body, ["tags", "command", "memory", "cpus", "image", "engine", "env_vars", "container_port", "network_mode", "respawn"]));
+            application.update(_.pick(req.body, [
+                "command",
+                "container_port",
+                "cpus",
+                "engine",
+                "env_vars",
+                "image",
+                "memory",
+                "network_mode",
+                "respawn",
+                "tags",
+                "volumes"
+            ]));
+
             core.applications.sync(function(){
                 core.applications.redeploy_containers(req.params.application, function(){
                     res.stash.code = 200;
