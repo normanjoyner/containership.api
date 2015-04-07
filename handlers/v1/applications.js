@@ -16,6 +16,12 @@ module.exports = function(core){
         // create applications
         create: function(req, res, next){
             if(!_.isUndefined(req.body)){
+                if(_.has(req.query, "destroy") && req.query.destroy == "true"){
+                    _.each(core.applications.list, function(application, application_name){
+                        core.applications.remove(application_name);
+                    });
+                }
+
                 _.each(req.body, function(application_config, application_name){
                     if(!_.has(core.applications.list, application_name)){
                         _.each(application_config.containers, function(container, container_id){
