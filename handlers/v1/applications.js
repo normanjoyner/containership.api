@@ -10,6 +10,11 @@ module.exports = function(core){
                 code: 200,
                 body: core.applications.serialize()
             }
+
+            core.api.server.server.emit("applications.get", {
+                req: req,
+                res: res
+            });
             return next();
         },
 
