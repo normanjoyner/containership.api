@@ -6,7 +6,7 @@ module.exports = function(core){
     return {
         // get application
         get: function(req, res, next){
-            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("."), function(err, application){
+            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
                 if(err && err.name == core.constants.myriad.ENOKEY)
                     res.stash.code = 404;
                 else if(err)
@@ -69,7 +69,7 @@ module.exports = function(core){
                     return next();
                 }
 
-                if(!_.contains(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("."))){
+                if(!_.contains(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"))){
                     res.stash.code = 404;
                     return next();
                 }
@@ -211,7 +211,7 @@ module.exports = function(core){
         remove_containers: function(req, res, next){
             if(_.has(req.query, "count")){
                 var errors = 0;
-                core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, req.params.application, "*"].join("."), function(err, containers){
+                core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, req.params.application, "*"].join("::"), function(err, containers){
                     containers = _.map(containers, function(container){
                         return _.last(container.split("."));
                     });

@@ -19,7 +19,7 @@ module.exports = function(core){
                 var containers = [];
 
                 async.each(applications, function(application_name, fn){
-                    core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, application_name].join("."), function(err, configuration){
+                    core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, application_name].join("::"), function(err, configuration){
                         if(_.isNull(err)){
                             try{
                                 configuration = JSON.parse(configuration);
