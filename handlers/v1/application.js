@@ -213,7 +213,7 @@ module.exports = function(core){
                 var errors = 0;
                 core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, req.params.application, "*"].join("::"), function(err, containers){
                     containers = _.map(containers, function(container){
-                        return _.last(container.split("."));
+                        return _.last(container.split("::"));
                     });
 
                     async.times(_.parseInt(req.query.count), function(index, fn){

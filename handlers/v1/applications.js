@@ -19,7 +19,7 @@ module.exports = function(core){
                             return fn();
 
                         try{
-                            res.stash.body[_.last(application_name.split("."))] = JSON.parse(application);
+                            res.stash.body[_.last(application_name.split("::"))] = JSON.parse(application);
                             return fn();
                         }
                         catch(err){
@@ -39,7 +39,7 @@ module.exports = function(core){
                     function(fn){
                         core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
                             applications = _.map(applications, function(application){
-                                return _.last(application.split("."));
+                                return _.last(application.split("::"));
                             });
 
                             all_applications = applications;
