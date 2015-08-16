@@ -29,6 +29,7 @@ module.exports = function(core){
                     "memory",
                     "network_mode",
                     "respawn",
+                    "privileged",
                     "tags",
                     "volumes"
                 ]);
@@ -72,6 +73,8 @@ module.exports = function(core){
                 body.network_mode = req.body.network_mode;
             if(_.has(req.body, "respawn"))
                 body.respawn = req.body.respawn;
+            if(_.has(req.body, "privileged"))
+                body.privileged = req.body.privileged;
             if(_.has(req.body, "tags"))
                 body.tags = req.body.tags;
             if(_.has(req.body, "volumes"))
@@ -87,6 +90,7 @@ module.exports = function(core){
                 "memory",
                 "network_mode",
                 "respawn",
+                "privileged",
                 "tags",
                 "volumes"
             ]));
