@@ -13,9 +13,18 @@ module.exports = function(core){
                     res.stash.code = 400;
                 else{
                     try{
-                        application = JSON.parse(application);
-                        res.stash.code = 200;
-                        res.stash.body = application;
+                        core.applications.get_containers(req.params.application, function(err, containers){
+                            if(err){
+                                res.stash.code = 400;
+                                return next();
+                            }
+                            else{
+                                application = JSON.parse(application);
+                                application.containers = containers;
+                                res.stash.code = 200;
+                                res.stash.body = application;
+                            }
+                        });
                     }
                     catch(err){
                         res.stash.code = 400;
