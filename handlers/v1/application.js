@@ -20,9 +20,7 @@ module.exports = function(core){
                                 res.stash.code = 400;
                             else{
                                 application = JSON.parse(application);
-                                application.containers = _.map(containers, function(container){
-                                    return _.defaults(container, application);
-                                });
+                                application.containers = containers;
                                 res.stash.code = 200;
                                 res.stash.body = application;
                             }
@@ -160,9 +158,7 @@ module.exports = function(core){
                                 res.stash.code = 400;
                             else{
                                 application = JSON.parse(application);
-                                res.stash.body = _.map(containers, function(container){
-                                    return _.defaults(container, application);
-                                });
+                                res.stash.body = containers;
                                 res.stash.code = 200;
                             }
                         });

@@ -14,7 +14,6 @@ module.exports = function(core){
                 var containers = {};
 
                 async.each(applications, function(application_name, fn){
-                    console.log(application_name);
                     core.cluster.myriad.persistence.get(application_name, function(err, configuration){
                         if(err)
                             return fn();

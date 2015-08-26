@@ -24,9 +24,7 @@ module.exports = function(core){
                                 if(err)
                                     return fn();
 
-                                application.containers = _.map(containers, function(container){
-                                    return _.defaults(container, application);
-                                });
+                                application.containers = containers;
                                 res.stash.body[application.id] = application;
                                 return fn();
                             });
