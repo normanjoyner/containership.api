@@ -15,35 +15,31 @@ module.exports = function(core){
             if(_.isUndefined(host))
                 return next();
 
-            core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
-                var containers = [];
+            host.containers = [];
 
-                async.each(applications, function(application_name, fn){
-                    core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, application_name].join("::"), function(err, configuration){
-                        if(_.isNull(err)){
-                            try{
-                                configuration = JSON.parse(configuration);
+            core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, "*", "*"].join("::"), function(err, containers){
+                if(err){
+                    res.stash.code = 400;
+                    return fn();
+                }
+
+                async.each(containers, function(container_name, fn){
+                    core.cluster.myriad.persistence.get(container_name, function(err, container){
+                        if(err)
+                            return fn();
+
+                        try{
+                            container = JSON.parse(container);
+                            if(container.host == host.id){
+                                container.application = container_name.split("::")[2];
+                                host.containers.push(container);
                             }
-                            catch(err){
-                                return fn();
-                            }
-
-                            var matching = _.filter(configuration.containers, function(container){
-                                return container.host == req.params.host;
-                            });
-
-                            containers.push(matching);
                         }
+                        catch(err){}
                         return fn();
                     });
-                }, function(err){
-                    if(err)
-                        res.stash.code = 400;
-                    else{
-                        res.stash.body = host;
-                        res.stash.body.containers = _.flatten(containers);
-                    }
-
+                }, function(){
+                    res.stash.body = host;
                     return next();
                 });
             });
