@@ -56,7 +56,7 @@ module.exports = function(core){
                 var host = hosts[req.params.host];
 
                 if(!_.isUndefined(host)){
-                    this.legiond.send({
+                    core.cluster.legiond.send({
                         event: core.constants.events.UPDATE_HOST,
                         data: req.body.tags
                     }, host);
@@ -80,7 +80,7 @@ module.exports = function(core){
             var host = hosts[req.params.host];
 
             if(!_.isUndefined(host)){
-                this.legiond.send({
+                core.cluster.legiond.send({
                     event: core.constants.events.DELETE_HOST
                 }, host);
 
