@@ -1,4 +1,5 @@
 var _ = require("lodash");
+var async = require("async");
 
 module.exports = function(core){
 
@@ -7,36 +8,65 @@ module.exports = function(core){
         // get applications
         get: function(req, res, next){
             res.stash = {
-                code: 200,
-                body: core.applications.serialize()
+                body: {},
+                code: 200
             }
-            return next();
+
+            core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
+                async.each(applications, function(application_name, fn){
+                    core.cluster.myriad.persistence.get(application_name, function(err, application){
+                        if(err)
+                            return fn();
+
+                        try{
+                            application = JSON.parse(application);
+                            core.applications.get_containers(application.id, function(err, containers){
+                                if(err)
+                                    return fn();
+
+                                application.containers = containers;
+                                res.stash.body[application.id] = application;
+                                return fn();
+                            });
+                        }
+                        catch(err){
+                            return fn();
+                        }
+                    });
+                }, next);
+            });
         },
 
         // create applications
         create: function(req, res, next){
             if(!_.isUndefined(req.body)){
-                if(_.has(req.query, "destroy") && req.query.destroy == "true"){
-                    _.each(core.applications.list, function(application, application_name){
-                        core.applications.remove(application_name);
-                    });
-                }
+                var all_applications;
 
-                _.each(req.body, function(application_config, application_name){
-                    if(!_.has(core.applications.list, application_name)){
-                        _.each(application_config.containers, function(container, container_id){
-                            if(container.random_host_port)
-                                container.host_port = null;
+                async.series([
+                    function(fn){
+                        core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
+                            applications = _.map(applications, function(application){
+                                return _.last(application.split("::"));
+                            });
 
-                            container.status = "unloaded";
-                            container.host = null;
-                            container.start_time = null;
+                            all_applications = applications;
+
+                            if(_.has(req.query, "destroy") && req.query.destroy == "true"){
+                                async.each(applications, function(application_name, fn){
+                                    core.applications.remove(application_name, fn);
+                                }, fn);
+                            }
+                            else
+                                return fn();
                         });
-                        core.applications.add(application_config);
+                    },
+                    function(fn){
+                        async.each(_.keys(req.body), function(application_name, fn){
+                            if(!_.contains(all_applications, application_name))
+                                core.applications.add(req.body[application_name], fn);
+                        });
                     }
-                });
-
-                core.applications.sync(function(){
+                ], function(){
                     res.stash.code = 201;
                     return next();
                 });
@@ -46,7 +76,6 @@ module.exports = function(core){
                 return next();
             }
         }
-
     }
 
 }
