@@ -64,7 +64,9 @@ module.exports = function(core){
                         async.each(_.keys(req.body), function(application_name, fn){
                             if(!_.contains(all_applications, application_name))
                                 core.applications.add(req.body[application_name], fn);
-                        });
+                            else
+                                return fn();
+                        }, fn);
                     }
                 ], function(){
                     res.stash.code = 201;
