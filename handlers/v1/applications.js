@@ -19,8 +19,15 @@ module.exports = function(core){
                             return fn();
 
                         try{
-                            res.stash.body[_.last(application_name.split("::"))] = JSON.parse(application);
-                            return fn();
+                            application = JSON.parse(application);
+                            core.applications.get_containers(application.id, function(err, containers){
+                                if(err)
+                                    return fn();
+
+                                application.containers = containers;
+                                res.stash.body[application.id] = application;
+                                return fn();
+                            });
                         }
                         catch(err){
                             return fn();

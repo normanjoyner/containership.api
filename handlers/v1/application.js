@@ -13,9 +13,18 @@ module.exports = function(core){
                     res.stash.code = 400;
                 else{
                     try{
-                        application = JSON.parse(application);
-                        res.stash.code = 200;
-                        res.stash.body = application;
+                        core.applications.get_containers(req.params.application, function(err, containers){
+                            if(err && err.name == core.constants.myriad.ENOKEY)
+                                res.stash.code = 404;
+                            else if(err)
+                                res.stash.code = 400;
+                            else{
+                                application = JSON.parse(application);
+                                application.containers = containers;
+                                res.stash.code = 200;
+                                res.stash.body = application;
+                            }
+                        });
                     }
                     catch(err){
                         res.stash.code = 400;
@@ -44,6 +53,7 @@ module.exports = function(core){
                     "memory",
                     "network_mode",
                     "respawn",
+                    "privileged",
                     "tags",
                     "volumes"
                 ]);
@@ -94,6 +104,8 @@ module.exports = function(core){
                     body.memory = req.body.memory;
                 if(_.has(req.body, "network_mode"))
                     body.network_mode = req.body.network_mode;
+                if(_.has(req.body, "privileged"))
+                    body.privileged = req.body.privileged;
                 if(_.has(req.body, "respawn"))
                     body.respawn = req.body.respawn;
                 if(_.has(req.body, "tags"))
@@ -135,28 +147,60 @@ module.exports = function(core){
 
         // get application containers
         get_containers: function(req, res, next){
-            core.applications.get_containers(req.params.application, function(err, containers){
-                if(err)
+            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
+                if(err && err.name == core.constants.myriad.ENOKEY)
+                    res.stash.code = 404;
+                else if(err)
                     res.stash.code = 400;
                 else{
-                    res.stash.body = containers;
-                    res.stash.code = 200;
+                    try{
+                        core.applications.get_containers(req.params.application, function(err, containers){
+                            if(err && err.name == core.constants.myriad.ENOKEY)
+                                res.stash.code = 404;
+                            else if(err)
+                                res.stash.code = 400;
+                            else{
+                                application = JSON.parse(application);
+                                res.stash.body = containers;
+                                res.stash.code = 200;
+                            }
+                        });
+                    }
+                    catch(err){
+                        res.stash.code = 400;
+                    }
                 }
+
                 return next();
             });
         },
 
         // get application container
         get_container: function(req, res, next){
-            core.applications.get_container(req.params.application, function(err, container){
+            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
                 if(err && err.name == core.constants.myriad.ENOKEY)
                     res.stash.code = 404;
                 else if(err)
                     res.stash.code = 400;
                 else{
-                    res.stash.body = container;
-                    res.stash.code = 200;
+                    try{
+                        core.applications.get_container(req.params.application, req.params.container, function(err, container){
+                            if(err && err.name == core.constants.myriad.ENOKEY)
+                                res.stash.code = 404;
+                            else if(err)
+                                res.stash.code = 400;
+                            else{
+                                application = JSON.parse(application);
+                                res.stash.body = _.defaults(container, application);
+                                res.stash.code = 200;
+                            }
+                        });
+                    }
+                    catch(err){
+                        res.stash.code = 400;
+                    }
                 }
+
                 return next();
             });
         },
@@ -178,7 +222,7 @@ module.exports = function(core){
                 var errors = 0;
 
                 async.timesSeries(_.parseInt(req.query.count), function(index, fn){
-                    core.applications.deploy_container(req.params.application, body, function(err){
+                    core.applications.deploy_container(req.params.application, _.cloneDeep(body), function(err){
                         if(err)
                             errors++;
 

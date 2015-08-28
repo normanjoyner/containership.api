@@ -10,11 +10,12 @@ module.exports = function(core){
             var attributes = core.cluster.legiond.get_attributes();
             hosts[attributes.id] = attributes;
 
-            core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
-                var containers = {};
+            _.each(hosts, function(configuration, host){
+                configuration.containers = [];
+            });
 
+            core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
                 async.each(applications, function(application_name, fn){
-                    console.log(application_name);
                     core.cluster.myriad.persistence.get(application_name, function(err, configuration){
                         if(err)
                             return fn();
@@ -22,18 +23,7 @@ module.exports = function(core){
                         try{
                             configuration = JSON.parse(configuration);
                         }
-                        catch(err){
-                            return fn();
-                        }
-
-                        var containers_by_host = _.groupBy(configuration.containers, "host");
-
-                        _.each(containers_by_host, function(host_containers, host){
-                            if(!_.has(containers, host))
-                                containers[host] = [];
-
-                            containers[host].push(host_containers);
-                        });
+                        catch(err){}
 
                         return fn();
                     });
@@ -43,14 +33,33 @@ module.exports = function(core){
                         return fn();
                     }
 
-                    _.each(hosts, function(host, host_id){
-                        hosts[host_id].containers = _.flatten(containers[host_id]);
+                    core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, "*", "*"].join("::"), function(err, containers){
+                        if(err){
+                            res.stash.code = 400;
+                            return fn();
+                        }
+
+                        async.each(containers, function(container_name, fn){
+                            core.cluster.myriad.persistence.get(container_name, function(err, container){
+                                if(err)
+                                    return fn();
+
+                                try{
+                                    container = JSON.parse(container);
+                                    var application = container_name.split("::")[2];
+                                    container.application = application;
+                                    hosts[container.host].containers.push(container);
+                                }
+                                catch(err){}
+                                return fn();
+                            });
+                        }, function(){
+                            res.stash.code = 200;
+                            res.stash.body = hosts;
+
+                            return next();
+                        });
                     });
-
-                    res.stash.code = 200;
-                    res.stash.body = hosts;
-
-                    return next();
                 });
             });
         }
