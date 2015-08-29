@@ -37,37 +37,41 @@ module.exports = function(core){
 
         // create application
         create: function(req, res, next){
-            if(_.has(core.applications.list, req.params.application)){
-                res.stash.code = 400;
-                res.stash.body = { error: ["Application", req.params.application, "already exists"].join(" ") };
-                return next();
-            }
-            else{
-                var config = _.pick(req.body, [
-                    "command",
-                    "container_port",
-                    "cpus",
-                    "engine",
-                    "env_vars",
-                    "image",
-                    "memory",
-                    "network_mode",
-                    "respawn",
-                    "privileged",
-                    "tags",
-                    "volumes"
-                ]);
+            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
+                if(err && err.name == core.constants.myriad.ENOKEY){
+                    var config = _.pick(req.body, [
+                        "command",
+                        "container_port",
+                        "cpus",
+                        "engine",
+                        "env_vars",
+                        "image",
+                        "memory",
+                        "network_mode",
+                        "respawn",
+                        "privileged",
+                        "tags",
+                        "volumes"
+                    ]);
 
-                config.id = req.params.application;
+                    config.id = req.params.application;
 
-                core.applications.add(config, function(err){
-                    if(err)
-                        res.stash.code = 400;
-                    else
-                        res.stash.code = 201;
+                    core.applications.add(config, function(err){
+                        if(err)
+                            res.stash.code = 400;
+                        else
+                            res.stash.code = 201;
 
+                        return next();
+                    });
+                }
+                else if(err)
+                    res.stash.code = 400;
+                else{
+                    res.stash.code = 400;
+                    res.stash.body = { error: ["Application", req.params.application, "already exists"].join(" ") };
                     return next();
-                });
+                }
             }
         },
 
