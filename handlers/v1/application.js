@@ -72,7 +72,7 @@ module.exports = function(core){
                     res.stash.body = { error: ["Application", req.params.application, "already exists"].join(" ") };
                     return next();
                 }
-            }
+            });
         },
 
         // update application
