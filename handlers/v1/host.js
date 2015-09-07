@@ -39,6 +39,7 @@ module.exports = function(core){
                         return fn();
                     });
                 }, function(){
+                    res.stash.code = 200;
                     res.stash.body = host;
                     return next();
                 });
