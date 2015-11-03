@@ -258,34 +258,19 @@ module.exports = function(core){
         // remove application containers
         remove_containers: function(req, res, next){
             if(_.has(req.query, "count")){
-                var errors = 0;
-                core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, req.params.application, "*"].join("::"), function(err, containers){
-                    containers = _.map(containers, function(container){
-                        return _.last(container.split("::"));
-                    });
-
-                    async.times(_.parseInt(req.query.count), function(index, fn){
-                        core.applications.remove_container(req.params.application, containers[index], function(err){
-                            if(err)
-                                errors++;
-
-                            return fn();
-                        });
-                    }, function(){
-                        if(errors > 0){
-                            res.stash.code = 400;
-                            res.stash.body = {
-                                error: {
-                                    failed: errors,
-                                    success: req.query.count - errors
-                                }
+                core.applications.remove_containers(req.params.application, _.parseInt(req.query.count), function(err){
+                    if(err){
+                        res.stash = {
+                            code: 400,
+                            body: {
+                                error: err.message
                             }
                         }
-                        else
-                            res.stash.code = 204;
+                    }
+                    else
+                        res.stash.code = 204;
 
-                        return next();
-                    });
+                    return next();
                 });
             }
             else{
@@ -293,7 +278,6 @@ module.exports = function(core){
                 res.stash.body = { error: "Please provide the 'count' query string with the number of containers to remove!" };
                 return next();
             }
-
         },
 
         // remove specific container
