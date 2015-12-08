@@ -11,34 +11,39 @@ module.exports = function(core){
             if(!_.contains(valid_log_types, req.params.log_type))
                 return next();
 
-            var file_path = [core.options["container-log-dir"], req.params.application, req.params.log_type].join("/");
+            var file_path = [core.options["container-log-dir"], req.params.application, req.params.container, req.params.log_type].join("/");
 
-            res.setHeader("Connection", "Transfer-Encoding");
-            res.setHeader("Content-Type", "text/html; charset=utf-8");
-            res.setHeader("Transfer-Encoding", "chunked");
+            fs.exists(file_path, function(exists){
+                if(!exists)
+                    return next();
 
-            var log = fs.createReadStream(file_path);
-            var tail = new Tail(file_path);
+                res.setHeader("Connection", "Transfer-Encoding");
+                res.setHeader("Content-Type", "text/html; charset=utf-8");
+                res.setHeader("Transfer-Encoding", "chunked");
 
-            log.on("data", function(line){
-                res.write(line);
-            });
+                var log = fs.createReadStream(file_path);
+                var tail = new Tail(file_path);
 
-            log.on("error", function(){
-                res.end();
-            });
-
-            log.on("end", function(){
-                tail.on("line", function(line){
-                    res.write([line, "\n"].join(""));
+                log.on("data", function(line){
+                    res.write(line);
                 });
 
-                tail.on("error", function(err){
+                log.on("error", function(){
                     res.end();
                 });
 
-                req.on("close", function(){
-                    tail.unwatch();
+                log.on("end", function(){
+                    tail.on("line", function(line){
+                        res.write([line, "\n"].join(""));
+                    });
+
+                    tail.on("error", function(err){
+                        res.end();
+                    });
+
+                    req.on("close", function(){
+                        tail.unwatch();
+                    });
                 });
             });
         }
