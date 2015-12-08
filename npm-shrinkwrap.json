@@ -289,11 +289,6 @@
       "version": "2.4.1",
       "from": "https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz",
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-2.4.1.tgz"
-    },
-    "tail": {
-      "version": "0.4.0",
-      "from": "tail@",
-      "resolved": "https://registry.npmjs.org/tail/-/tail-0.4.0.tgz"
     }
   }
 }
