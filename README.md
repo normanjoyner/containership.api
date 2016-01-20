@@ -3,6 +3,9 @@ containership.api
 
 ##About
 
+###Build Status
+[![Build Status](https://drone.containership.io/api/badges/containership/containership.api/status.svg)](https://drone.containership.io/containership/containership.api)
+
 ###Description
 The API for Containership
 
