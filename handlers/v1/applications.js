@@ -73,7 +73,7 @@ module.exports = function(core){
                     return next();
                 });
             }
-            else{
+            else {
                 res.stash.code = 400;
                 return next();
             }

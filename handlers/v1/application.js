@@ -56,12 +56,14 @@ module.exports = function(core){
 
                     config.id = req.params.application;
 
-                    core.applications.add(config, function(err){
-                        if(err)
+                    core.applications.add(config, function(err, application) {
+                        if(err) {
                             res.stash.code = 400;
-                        else
-                            res.stash.code = 201;
+                            return next();
+                        }
 
+                        res.stash.code = 200;
+                        res.stash.body = application;
                         return next();
                     });
                 }
@@ -117,18 +119,21 @@ module.exports = function(core){
                 if(_.has(req.body, "volumes"))
                     body.volumes = req.body.volumes;
 
-                core.applications.add(body, function(err){
-                    if(err){
+                core.applications.add(body, function(err, application){
+                    if(err) {
                         res.stash.code = 400;
                         return next();
                     }
 
-                    core.applications.redeploy_containers(req.params.application, function(err){
-                        if(err)
+                    core.applications.redeploy_containers(req.params.application, function(err, deployed_containers) {
+                        if(err) {
                             res.stash.code = 400;
-                        else
-                            res.stash.code = 200;
+                            return next();
+                        }
 
+                        application.containers = deployed_containers;
+                        res.stash.code = 200;
+                        res.stash.body = application;
                         return next();
                     });
                 });
