@@ -52,6 +52,7 @@ module.exports = function(core){
                             all_applications = applications;
 
                             if(_.has(req.query, "destroy") && req.query.destroy == "true"){
+                                all_applications = [];
                                 async.each(applications, function(application_name, fn){
                                     core.applications.remove(application_name, fn);
                                 }, fn);
