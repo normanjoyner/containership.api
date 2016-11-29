@@ -1,22 +1,22 @@
 'use strict';
 
-module.exports = function(core){
+module.exports = function(core) {
 
     return {
         // get cluster state
-        get: function(req, res, next){
+        get(req, res, next) {
             res.stash = {
                 code: 200,
                 body: {
                     id: core.cluster_id
                 }
-            }
+            };
 
             return next();
         },
 
         // kill containership on cluster
-        delete: function(req, res, next) {
+        delete(req, res, next) {
             // if not the controlling leader, ignore request (X-Containership-Api-Redirect: false) must have been set
             if (!core.cluster.praetor.is_controlling_leader()) {
                 res.stash.code = 400;
@@ -36,11 +36,11 @@ module.exports = function(core){
             res.stash.code = 204;
 
             core.loggers['containership.core'].log('info', 'Host shutdown requested. Shutting down ...');
-            core.cluster.legiond.exit(() => {
+            return core.cluster.legiond.exit(() => {
                 res.stash.code = 204;
                 next();
                 return process.exit(0);
-            })
+            });
         }
-    }
-}
+    };
+};

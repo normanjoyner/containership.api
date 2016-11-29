@@ -1,62 +1,65 @@
-var _ = require("lodash");
-var async = require("async");
+'use strict';
 
-module.exports = function(core){
+const _ = require('lodash');
+const async = require('async');
+
+module.exports = function(core) {
 
     return {
         // get application
-        get: function(req, res, next){
-            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
-                if(err && err.name == core.constants.myriad.ENOKEY)
+        get(req, res, next) {
+            return core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER), (err, application) => {
+                if(err && err.name === core.constants.myriad.ENOKEY) {
                     res.stash.code = 404;
-                else if(err)
+                    return next();
+                } else if(err) {
                     res.stash.code = 400;
-                else{
-                    try{
-                        core.applications.get_containers(req.params.application, function(err, containers){
-                            if(err && err.name == core.constants.myriad.ENOKEY)
-                                res.stash.code = 404;
-                            else if(err)
-                                res.stash.code = 400;
-                            else{
-                                application = JSON.parse(application);
-                                application.containers = containers;
-                                res.stash.code = 200;
-                                res.stash.body = application;
-                            }
-                        });
-                    }
-                    catch(err){
-                        res.stash.code = 400;
-                    }
+                    return next();
                 }
 
-                return next();
+                try {
+                    return core.applications.get_containers(req.params.application, (err, containers) => {
+                        if(err && err.name === core.constants.myriad.ENOKEY)  {
+                            res.stash.code = 404;
+                        } else if(err) {
+                            res.stash.code = 400;
+                        } else {
+                            application = JSON.parse(application);
+                            application.containers = containers;
+                            res.stash.code = 200;
+                            res.stash.body = application;
+                        }
+                        return next();
+                    });
+                } catch(err) {
+                    res.stash.code = 400;
+                    return next();
+                }
             });
         },
 
         // create application
-        create: function(req, res, next){
-            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
-                if(err && err.name == core.constants.myriad.ENOKEY){
-                    var config = _.pick(req.body, [
-                        "command",
-                        "container_port",
-                        "cpus",
-                        "engine",
-                        "env_vars",
-                        "image",
-                        "memory",
-                        "network_mode",
-                        "respawn",
-                        "privileged",
-                        "tags",
-                        "volumes"
+        create(req, res, next) {
+            return core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER), (err/*, application*/) => {
+                if(err && err.name == core.constants.myriad.ENOKEY) {
+                    const config = _.pick(req.body, [
+                        'command',
+                        'container_port',
+                        'cpus',
+                        'engine',
+                        'env_vars',
+                        'image',
+                        'memory',
+                        'network_mode',
+                        'privileged',
+                        'respawn',
+                        'tags',
+                        'volumes'
                     ]);
 
                     config.id = req.params.application;
 
-                    core.applications.add(config, function(err, application) {
+                    return core.applications.add(config, (err, application) => {
                         if(err) {
                             res.stash.code = 400;
                             return next();
@@ -66,66 +69,77 @@ module.exports = function(core){
                         res.stash.body = application;
                         return next();
                     });
-                }
-                else if(err)
+                } else if(err) {
                     res.stash.code = 400;
-                else{
+                } else {
                     res.stash.code = 400;
-                    res.stash.body = { error: ["Application", req.params.application, "already exists"].join(" ") };
+                    res.stash.body = { error: `Application ${req.params.application} already exists` };
                     return next();
                 }
             });
         },
 
         // update application
-        update: function(req, res, next){
-            core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, function(err, applications){
-                if(err){
+        update(req, res, next) {
+            return core.cluster.myriad.persistence.keys(core.constants.myriad.APPLICATIONS, (err, applications) => {
+                if(err) {
                     res.stash.code = 400;
                     return next();
                 }
 
-                if(!_.contains(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"))){
+                if(!_.contains(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER))) {
                     res.stash.code = 404;
                     return next();
                 }
 
-                var body = {
+                const body = {
                     id: req.params.application
+                };
+
+                if(_.has(req.body, 'command')) {
+                    body.command = req.body.command;
+                }
+                if(_.has(req.body, 'container_port')) {
+                    body.container_port = req.body.container_port;
+                }
+                if(_.has(req.body, 'cpus')) {
+                    body.cpus = req.body.cpus;
+                }
+                if(_.has(req.body, 'engine')) {
+                    body.engine = req.body.engine;
+                }
+                if(_.has(req.body, 'env_vars')) {
+                    body.env_vars = req.body.env_vars;
+                }
+                if(_.has(req.body, 'image')) {
+                    body.image = req.body.image;
+                }
+                if(_.has(req.body, 'memory')) {
+                    body.memory = req.body.memory;
+                }
+                if(_.has(req.body, 'network_mode')) {
+                    body.network_mode = req.body.network_mode;
+                }
+                if(_.has(req.body, 'privileged')) {
+                    body.privileged = req.body.privileged;
+                }
+                if(_.has(req.body, 'respawn')) {
+                    body.respawn = req.body.respawn;
+                }
+                if(_.has(req.body, 'tags')) {
+                    body.tags = req.body.tags;
+                }
+                if(_.has(req.body, 'volumes')) {
+                    body.volumes = req.body.volumes;
                 }
 
-                if(_.has(req.body, "command"))
-                    body.command = req.body.command;
-                if(_.has(req.body, "container_port"))
-                    body.container_port = req.body.container_port;
-                if(_.has(req.body, "cpus"))
-                    body.cpus = req.body.cpus;
-                if(_.has(req.body, "engine"))
-                    body.engine = req.body.engine;
-                if(_.has(req.body, "env_vars"))
-                    body.env_vars = req.body.env_vars;
-                if(_.has(req.body, "image"))
-                    body.image = req.body.image;
-                if(_.has(req.body, "memory"))
-                    body.memory = req.body.memory;
-                if(_.has(req.body, "network_mode"))
-                    body.network_mode = req.body.network_mode;
-                if(_.has(req.body, "privileged"))
-                    body.privileged = req.body.privileged;
-                if(_.has(req.body, "respawn"))
-                    body.respawn = req.body.respawn;
-                if(_.has(req.body, "tags"))
-                    body.tags = req.body.tags;
-                if(_.has(req.body, "volumes"))
-                    body.volumes = req.body.volumes;
-
-                core.applications.add(body, function(err, application){
+                return core.applications.add(body, (err, application) => {
                     if(err) {
                         res.stash.code = 400;
                         return next();
                     }
 
-                    core.applications.redeploy_containers(req.params.application, function(err, deployed_containers) {
+                    return core.applications.redeploy_containers(req.params.application, (err, deployed_containers) => {
                         if(err) {
                             res.stash.code = 400;
                             return next();
@@ -141,163 +155,165 @@ module.exports = function(core){
         },
 
         // delete application
-        delete: function(req, res, next){
-            core.applications.remove(req.params.application, function(err){
-                if(err && err.name == core.constants.myriad.ENOKEY)
+        delete(req, res, next) {
+            return core.applications.remove(req.params.application, (err) => {
+                if(err && err.name == core.constants.myriad.ENOKEY) {
                     res.stash.code = 404;
-                else if(err)
+                } else if(err) {
                     res.stash.code = 400;
-                else
+                } else {
                     res.stash.code = 204;
+                }
 
                 return next();
             });
         },
 
         // get application containers
-        get_containers: function(req, res, next){
-            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
-                if(err && err.name == core.constants.myriad.ENOKEY)
+        get_containers(req, res, next) {
+            return core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER), (err, application) => {
+                if(err && err.name == core.constants.myriad.ENOKEY) {
                     res.stash.code = 404;
-                else if(err)
+                    return next();
+                } else if(err) {
                     res.stash.code = 400;
-                else{
-                    try{
-                        core.applications.get_containers(req.params.application, function(err, containers){
-                            if(err && err.name == core.constants.myriad.ENOKEY)
-                                res.stash.code = 404;
-                            else if(err)
-                                res.stash.code = 400;
-                            else{
-                                application = JSON.parse(application);
-                                res.stash.body = containers;
-                                res.stash.code = 200;
-                            }
-                        });
-                    }
-                    catch(err){
-                        res.stash.code = 400;
-                    }
+                    return next();
                 }
 
-                return next();
+                try {
+                    return core.applications.get_containers(req.params.application, (err, containers) => {
+                        if(err && err.name == core.constants.myriad.ENOKEY) {
+                            res.stash.code = 404;
+                        } else if(err) {
+                            res.stash.code = 400;
+                        } else {
+                            application = JSON.parse(application);
+                            res.stash.body = containers;
+                            res.stash.code = 200;
+                        }
+                        return next();
+                    });
+                } catch(err) {
+                    res.stash.code = 400;
+                    return next();
+                }
             });
         },
 
         // get application container
-        get_container: function(req, res, next){
-            core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join("::"), function(err, application){
-                if(err && err.name == core.constants.myriad.ENOKEY)
+        get_container(req, res, next) {
+            return core.cluster.myriad.persistence.get([core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER), (err, application) => {
+                if(err && err.name == core.constants.myriad.ENOKEY) {
                     res.stash.code = 404;
-                else if(err)
+                    return next();
+                } else if(err) {
                     res.stash.code = 400;
-                else{
-                    try{
-                        core.applications.get_container(req.params.application, req.params.container, function(err, container){
-                            if(err && err.name == core.constants.myriad.ENOKEY)
-                                res.stash.code = 404;
-                            else if(err)
-                                res.stash.code = 400;
-                            else{
-                                application = JSON.parse(application);
-                                res.stash.body = _.defaults(container, application);
-                                res.stash.code = 200;
-                            }
-                        });
-                    }
-                    catch(err){
-                        res.stash.code = 400;
-                    }
+                    return next();
                 }
 
-                return next();
+                try {
+                    return core.applications.get_container(req.params.application, req.params.container, (err, container) => {
+                        if(err && err.name == core.constants.myriad.ENOKEY) {
+                            res.stash.code = 404;
+                        } else if(err) {
+                            res.stash.code = 400;
+                        } else {
+                            application = JSON.parse(application);
+                            res.stash.body = _.defaults(container, application);
+                            res.stash.code = 200;
+                        }
+                        return next();
+                    });
+                } catch(err) {
+                    res.stash.code = 400;
+                    return next();
+                }
             });
         },
 
         // create application container
-        create_containers: function(req, res, next){
-            if(_.has(req.query, "count")){
-                var body = {};
+        create_containers(req, res, next) {
+            if(_.has(req.query, 'count')) {
+                const body = {};
 
-                if(_.has(req.body, "tags") && _.isObject(req.body.tags))
+                if(_.has(req.body, 'tags') && _.isObject(req.body.tags)) {
                     body.tags = req.body.tags;
-
-                if(_.has(req.body, "container_port") && _.isNumber(req.body.container_port))
+                }
+                if(_.has(req.body, 'container_port') && _.isNumber(req.body.container_port)) {
                     body.container_port = req.body.container_port;
-
-                if(_.has(req.body, "host_port") && _.isNumber(req.body.host_port))
+                }
+                if(_.has(req.body, 'host_port') && _.isNumber(req.body.host_port)) {
                     body.host_port = req.body.host_port;
+                }
+                let errors = 0;
 
-                var errors = 0;
-
-                async.timesSeries(_.parseInt(req.query.count), function(index, fn){
-                    core.applications.deploy_container(req.params.application, _.cloneDeep(body), function(err){
-                        if(err)
+                return async.timesSeries(_.parseInt(req.query.count), (index, fn) => {
+                    core.applications.deploy_container(req.params.application, _.cloneDeep(body), (err) => {
+                        if(err) {
                             errors++;
-
+                        }
                         return fn();
                     });
-                }, function(){
-                    if(errors > 0){
+                }, () => {
+                    if(errors > 0) {
                         res.stash.code = 400;
                         res.stash.body = {
                             error: {
                                 failed: errors,
                                 success: req.query.count - errors
                             }
-                        }
-                    }
-                    else
+                        };
+                    } else {
                         res.stash.code = 201;
+                    }
 
                     return next();
                 });
-            }
-            else{
+            } else {
                 res.stash.code = 400;
-                res.stash.body = { error: "Please provide the 'count' query string with the number of containers to create!" };
+                res.stash.body = { error: 'Please provide the \'count\' query string with the number of containers to create!' };
                 return next();
             }
         },
 
         // remove application containers
-        remove_containers: function(req, res, next){
-            if(_.has(req.query, "count")){
-                core.applications.remove_containers(req.params.application, _.parseInt(req.query.count), function(err){
-                    if(err){
+        remove_containers(req, res, next) {
+            if(_.has(req.query, 'count')) {
+                return core.applications.remove_containers(req.params.application, _.parseInt(req.query.count), (err) => {
+                    if(err) {
                         res.stash = {
                             code: 400,
                             body: {
                                 error: err.message
                             }
-                        }
-                    }
-                    else
+                        };
+                    } else {
                         res.stash.code = 204;
+                    }
 
                     return next();
                 });
             }
-            else{
-                res.stash.code = 400;
-                res.stash.body = { error: "Please provide the 'count' query string with the number of containers to remove!" };
-                return next();
-            }
+
+            res.stash.code = 400;
+            res.stash.body = { error: 'Please provide the \'count\' query string with the number of containers to remove!' };
+            return next();
         },
 
         // remove specific container
-        remove_container: function(req, res, next){
-            core.applications.remove_container(req.params.application, req.params.container, function(err){
-                if(err && err.name == core.constants.myriad.ENOKEY)
+        remove_container(req, res, next) {
+            return core.applications.remove_container(req.params.application, req.params.container, (err) => {
+                if(err && err.name == core.constants.myriad.ENOKEY) {
                     res.stash.code = 404;
-                else if(err)
+                } else if(err) {
                     res.stash.code = 400;
-                else
+                } else {
                     res.stash.code = 204;
+                }
 
                 return next();
             });
         }
-    }
+    };
 
-}
+};

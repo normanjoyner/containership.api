@@ -1,44 +1,46 @@
-var _ = require("lodash");
-var async = require("async");
+'use strict';
 
-module.exports = function(core){
+const _ = require('lodash');
+const async = require('async');
+
+module.exports = function(core) {
 
     return {
         // get host
-        get: function(req, res, next){
-            var hosts = _.indexBy(core.cluster.legiond.get_peers(), "id");
+        get(req, res, next) {
+            const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
 
-            var attributes = core.cluster.legiond.get_attributes();
+            const attributes = core.cluster.legiond.get_attributes();
             hosts[attributes.id] = attributes;
 
-            var host = hosts[req.params.host];
-            if(_.isUndefined(host))
+            const host = hosts[req.params.host];
+            if(_.isUndefined(host)) {
                 return next();
-
+            }
             host.containers = [];
 
-            core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, "*", "*"].join("::"), function(err, containers){
-                if(err){
+            return core.cluster.myriad.persistence.keys([core.constants.myriad.CONTAINERS_PREFIX, '*', '*'].join(core.constants.myriad.DELIMITER), (err, containers) => {
+                if(err) {
                     res.stash.code = 400;
-                    return fn();
+                    return next();
                 }
 
-                async.each(containers, function(container_name, fn){
-                    core.cluster.myriad.persistence.get(container_name, function(err, container){
-                        if(err)
+                return async.each(containers, (container_name, fn) => {
+                    return core.cluster.myriad.persistence.get(container_name, (err, container) => {
+                        if(err) {
                             return fn();
+                        }
 
-                        try{
+                        try {
                             container = JSON.parse(container);
-                            if(container.host == host.id){
-                                container.application = container_name.split("::")[2];
+                            if(container.host == host.id) {
+                                container.application = container_name.split(core.constants.myriad.DELIMITER)[2];
                                 host.containers.push(container);
                             }
-                        }
-                        catch(err){}
+                        } catch(err) { /* do nothing */ }
                         return fn();
                     });
-                }, function(){
+                }, () => {
                     res.stash.code = 200;
                     res.stash.body = host;
                     return next();
@@ -47,16 +49,16 @@ module.exports = function(core){
         },
 
         // update host
-        update: function(req, res, next){
-            if(!_.isUndefined(req.body) && _.has(req.body, "tags")){
-                var hosts = _.indexBy(core.cluster.legiond.get_peers(), "id");
+        update(req, res, next) {
+            if(!_.isUndefined(req.body) && _.has(req.body, 'tags')) {
+                const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
 
-                var attributes = core.cluster.legiond.get_attributes();
+                const attributes = core.cluster.legiond.get_attributes();
                 hosts[attributes.id] = attributes;
 
-                var host = hosts[req.params.host];
+                const host = hosts[req.params.host];
 
-                if(!_.isUndefined(host)){
+                if(!_.isUndefined(host)) {
                     core.cluster.legiond.send({
                         event: core.constants.events.UPDATE_HOST,
                         data: req.body.tags
@@ -64,23 +66,23 @@ module.exports = function(core){
 
                     res.stash.code = 200;
                 }
-            }
-            else
+            } else {
                 res.stash.code = 400;
+            }
 
             return next();
         },
 
         // delete host
-        delete: function(req, res, next){
-            var hosts = _.indexBy(core.cluster.legiond.get_peers(), "id");
+        delete(req, res, next) {
+            const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
 
-            var attributes = core.cluster.legiond.get_attributes();
+            const attributes = core.cluster.legiond.get_attributes();
             hosts[attributes.id] = attributes;
 
-            var host = hosts[req.params.host];
+            const host = hosts[req.params.host];
 
-            if(!_.isUndefined(host)){
+            if(!_.isUndefined(host)) {
                 core.cluster.legiond.send({
                     event: core.constants.events.DELETE_HOST
                 }, host);
@@ -90,6 +92,6 @@ module.exports = function(core){
 
             return next();
         }
-    }
+    };
 
-}
+};
