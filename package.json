@@ -2,8 +2,9 @@
   "name": "containership.api",
   "version": "1.4.3",
   "description": "The API for ContainerShip",
-  "main": "application.js",
+  "main": "index.js",
   "scripts": {
+    "lint": "./node_modules/.bin/eslint .",
     "test": "./node_modules/.bin/mocha"
   },
   "repository": {
@@ -21,10 +22,12 @@
     "body-parser": "^1.4.3",
     "express": "^4.2.0",
     "lodash": "^2.4.1",
-    "mocha": "^2.3.4",
     "semver": "^5.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+      "eslint": "^3.3.1",
+      "mocha": "^2.3.4"
+  },
   "keywords": [
     "containership",
     "containership.api",
