@@ -11,5 +11,11 @@ module.exports = {
         help: 'Port for API to listen on',
         metavar: 'PORT',
         default: '8080'
+    },
+
+    'api-max-body-size': {
+        help: 'Max request body size (mb)',
+        metavar: 'BODY_SIZE',
+        default: '1'
     }
 };
