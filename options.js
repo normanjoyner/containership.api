@@ -10,7 +10,7 @@ module.exports = {
     'api-port': {
         help: 'Port for API to listen on',
         metavar: 'PORT',
-        default: '8080'
+        default: '80'
     },
 
     'api-max-body-size': {
