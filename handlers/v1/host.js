@@ -7,7 +7,7 @@ module.exports = {
     // get host
     get(req, res, next) {
         const core = req.core;
-        const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
+        const hosts = _.keyBy(core.cluster.legiond.get_peers(), 'id');
 
         const attributes = core.cluster.legiond.get_attributes();
         hosts[attributes.id] = attributes;
@@ -51,7 +51,7 @@ module.exports = {
     update(req, res, next) {
         const core = req.core;
         if(!_.isUndefined(req.body) && _.has(req.body, 'tags')) {
-            const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
+            const hosts = _.keyBy(core.cluster.legiond.get_peers(), 'id');
 
             const attributes = core.cluster.legiond.get_attributes();
             hosts[attributes.id] = attributes;
@@ -76,7 +76,7 @@ module.exports = {
     // delete host
     delete(req, res, next) {
         const core = req.core;
-        const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
+        const hosts = _.keyBy(core.cluster.legiond.get_peers(), 'id');
 
         const attributes = core.cluster.legiond.get_attributes();
         hosts[attributes.id] = attributes;

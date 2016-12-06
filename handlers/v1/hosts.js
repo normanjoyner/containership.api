@@ -7,7 +7,7 @@ module.exports = {
     // get all hosts
     get(req, res, next) {
         const core = req.core;
-        const hosts = _.indexBy(core.cluster.legiond.get_peers(), 'id');
+        const hosts = _.keyBy(core.cluster.legiond.get_peers(), 'id');
         const attributes = core.cluster.legiond.get_attributes();
         hosts[attributes.id] = attributes;
 
