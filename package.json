@@ -1,6 +1,6 @@
 {
   "name": "containership.api",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "The API for ContainerShip",
   "main": "index.js",
   "scripts": {
