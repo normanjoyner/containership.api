@@ -112,6 +112,20 @@ module.exports = {
             if(_.has(req.body, 'env_vars')) {
                 body.env_vars = req.body.env_vars;
             }
+            if(_.has(req.body, 'health_checks')) {
+                body.health_checks = req.body.health_checks;
+                const health_check_defaults = {
+                    interval : 30000,
+                    healthy_threshold : 1,
+                    max_consecutive_failures : 3,
+                    timeout : 5000,
+                    type : 'tcp'
+                };
+
+                _.each(body.health_checks, (health_check) => {
+                    _.defaults(health_check, health_check_defaults);
+                });
+            }
             if(_.has(req.body, 'image')) {
                 body.image = req.body.image;
             }
