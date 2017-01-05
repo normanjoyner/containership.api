@@ -78,7 +78,7 @@ module.exports = {
                 },
                 (fn) => {
                     return async.each(_.keys(req.body), (application_name, fn) => {
-                        if(!_.contains(all_applications, application_name)) {
+                        if(!_.includes(all_applications, application_name)) {
                             return core.applications.add(req.body[application_name], fn);
                         }
 

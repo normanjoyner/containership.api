@@ -88,7 +88,7 @@ module.exports = {
                 return next();
             }
 
-            if(!_.contains(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER))) {
+            if(!_.includes(applications, [core.constants.myriad.APPLICATION_PREFIX, req.params.application].join(core.constants.myriad.DELIMITER))) {
                 res.stash.code = 404;
                 return next();
             }
