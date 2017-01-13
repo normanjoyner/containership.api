@@ -59,7 +59,7 @@ module.exports = {
                                 container = JSON.parse(container);
                                 const application = container_name.split(core.constants.myriad.DELIMITER)[2];
                                 container.application = application;
-                                hosts[container.host].containers.push(container);
+                                hosts[container.host] && hosts[container.host].containers.push(container);
                             } catch(err) {
                                 return fn(err);
                             }
