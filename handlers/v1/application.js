@@ -115,11 +115,11 @@ module.exports = {
             if(_.has(req.body, 'health_checks')) {
                 body.health_checks = req.body.health_checks;
                 const health_check_defaults = {
-                    interval : 30000,
-                    healthy_threshold : 1,
-                    max_consecutive_failures : 3,
-                    timeout : 5000,
-                    type : 'tcp'
+                    interval: 30000,
+                    healthy_threshold: 1,
+                    unhealthy_threshold: 3,
+                    timeout: 5000,
+                    type: 'tcp'
                 };
 
                 _.each(body.health_checks, (health_check) => {
