@@ -40,21 +40,23 @@ module.exports = {
     state: function(req, res, next) {
         async.parallel({
             applications: (fn) => {
-                applications.get(req, res, () => {
-                    if(res.stash.code !== 200) {
+                const spy = { stash: {} };
+                applications.get(req, spy, () => {
+                    if(spy.stash.code !== 200) {
                         return fn(new Error('Error getting applications.'));
                     }
 
-                    return fn(null, res.stash.body);
+                    return fn(null, spy.stash.body);
                 });
             },
             hosts: (fn) => {
-                hosts.get(req, res, () => {
-                    if(res.stash.code !== 200) {
+                const spy = { stash: {} };
+                hosts.get(req, spy, () => {
+                    if(spy.stash.code !== 200) {
                         return fn(new Error('Error getting hosts.'));
                     }
 
-                    return fn(null, res.stash.body);
+                    return fn(null, spy.stash.body);
                 });
             }
         }, (err, results) => {
