@@ -3,6 +3,14 @@
 const _ = require('lodash');
 const async = require('async');
 
+const health_check_defaults = {
+    interval: 15000,
+    healthy_threshold: 2,
+    unhealthy_threshold: 4,
+    timeout: 5000,
+    type: 'tcp'
+};
+
 module.exports = {
     // get application
     get(req, res, next) {
@@ -48,6 +56,7 @@ module.exports = {
                     'cpus',
                     'engine',
                     'env_vars',
+                    'health_checks',
                     'image',
                     'memory',
                     'network_mode',
@@ -58,6 +67,23 @@ module.exports = {
                 ]);
 
                 config.id = req.params.application;
+
+                if(_.has(config, 'health_checks')) {
+                    // set health check defaults
+                    config.health_checks = _.map(config.health_checks, (health_check) => {
+                        health_check = _.defaults(health_check, health_check_defaults);
+
+                        if(health_check.type === 'http' && !health_check.path) {
+                            health_check.path = '/';
+                        }
+
+                        if(health_check.type === 'http' && !health_check.status_code) {
+                            health_check.status_code = 200;
+                        }
+
+                        return health_check;
+                    });
+                }
 
                 return core.applications.add(config, (err, application) => {
                     if(err) {
@@ -114,16 +140,20 @@ module.exports = {
             }
             if(_.has(req.body, 'health_checks')) {
                 body.health_checks = req.body.health_checks;
-                const health_check_defaults = {
-                    interval: 15000,
-                    healthy_threshold: 2,
-                    unhealthy_threshold: 4,
-                    timeout: 5000,
-                    type: 'tcp'
-                };
 
-                _.each(body.health_checks, (health_check) => {
-                    _.defaults(health_check, health_check_defaults);
+                // set health check defaults
+                body.health_checks = _.map(body.health_checks, (health_check) => {
+                    health_check = _.defaults(health_check, health_check_defaults);
+
+                    if(health_check.type === 'http' && !health_check.path) {
+                        health_check.path = '/';
+                    }
+
+                    if(health_check.type === 'http' && !health_check.status_code) {
+                        health_check.status_code = 200;
+                    }
+
+                    return health_check;
                 });
             }
             if(_.has(req.body, 'image')) {
